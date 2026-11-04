@@ -49,6 +49,11 @@
         <canvas id="board" aria-label="Redstone board"></canvas>
       </div>
       <p class="hint" id="hint"></p>
+      <div class="scope-box">
+        <div class="scope-head"><b>Signal graph</b><span class="muted small">last 100 ticks · tick <span id="tickCount">0</span></span></div>
+        <div class="scope-wrap"><canvas id="scope"></canvas></div>
+        <div class="scope-legend" id="scopeLegend"></div>
+      </div>
     </section>
 
     <aside class="side">
@@ -64,7 +69,7 @@
   </main>
 
   <footer class="foot">
-    Fan-made redstone sandbox. Not affiliated with Mojang or Microsoft. Shortcuts: 1–0 &amp; P parts · Q use · E erase · R rotate · G route helper · Space pause · Ctrl+Z undo
+    Fan-made redstone sandbox. Not affiliated with Mojang or Microsoft. Shortcuts: 1–0 &amp; P parts · Q use · E erase · R rotate · T probe · G route helper · Space pause · Ctrl+Z undo
   </footer>
 
   <div id="toast" role="status" aria-live="polite"></div>
