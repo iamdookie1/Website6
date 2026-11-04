@@ -25,10 +25,11 @@ function makeCell(t, o = {}) {
   if (TYPES[t].dir) c.f = o.f ?? 1;
   if (t === 'lever') c.on = !!o.on;
   if (t === 'button') { c.on = false; c.timer = 0; }
-  if (t === 'torch') c.on = o.on ?? true;
+  if (t === 'torch') c.on = !!(o.on ?? true);
   if (t === 'repeater') { c.on = !!o.on; c.delay = o.delay || 1; }
   if (t === 'comparator') { c.out = 0; c.mode = o.mode || 'cmp'; }
-  if (t === 'observer') { c.pulse = false; }
+  if (t === 'observer') { c.pulse = false; if (o.kick) c.pend = { v: true, t: 1 }; }
+  if (o.fixed) c.fixed = true;
   return c;
 }
 
@@ -88,6 +89,17 @@ class Sim {
     const ni = this.idx(nx, ny), into = opp(d);
     if (N.t === 'dust') return (this.net.point[ni] >> into & 1) ? this.net.level[ni] : 0;
     return this.emit(N, ni, into, kind);
+  }
+
+  // Can neighbour N (in direction d from a cell) send power into that cell?
+  static feeds(N, d) {
+    if (!N) return false;
+    switch (N.t) {
+      case 'dust': case 'lever': case 'button': case 'rblock': case 'torch': return true;
+      case 'repeater': case 'comparator': return N.f === opp(d);
+      case 'observer': return N.f === d;
+      default: return false;
+    }
   }
 
   static strongInto(N, dir) {
@@ -231,13 +243,21 @@ class Sim {
       if (c.t === 'observer' && c.pulse && --c.offIn <= 0) c.pulse = false;
     }
     // b. apply scheduled changes
-    for (const c of cells) {
+    for (let i = 0; i < cells.length; i++) {
+      const c = cells[i];
       if (!c || !c.pend) continue;
       if (--c.pend.t > 0) continue;
       const v = c.pend.v; c.pend = null;
+      if (c.t === 'repeater' && this.net && (this.net.want[i] & 2)) continue; // locked repeaters ignore their scheduled tick
       if (c.t === 'comparator') c.out = v;
       else if (c.t === 'observer') { c.pulse = true; c.offIn = 1; }
       else c.on = v;
+      if (c.t === 'torch' && !v) {
+        // burnout: 8 turn-offs within 30 redstone ticks (60 game ticks)
+        c.offs = (c.offs || []).filter(t => this.ticks - t < 30);
+        c.offs.push(this.ticks);
+        if (c.offs.length >= 8) { c.burnt = this.ticks + 50; c.offs = []; }
+      }
     }
     // c. evaluate wiring
     this.compute();
@@ -248,7 +268,8 @@ class Sim {
       if (!c) continue;
       switch (c.t) {
         case 'torch': {
-          const want = !!net.want[i];
+          let want = !!net.want[i];
+          if (c.burnt) { if (this.ticks < c.burnt) want = false; else c.burnt = 0; }
           if (want !== c.on) { if (!c.pend) c.pend = { v: want, t: 1 }; } else c.pend = null;
           break;
         }
@@ -283,6 +304,9 @@ class Sim {
       const o = {};
       if (c.f !== undefined) o.f = c.f;
       if (c.t === 'lever' && c.on) o.on = 1;
+      if (c.t === 'torch' && !c.on) o.on = 0;
+      if (c.t === 'observer' && (c.pend || c.pulse)) o.kick = 1;
+      if (c.fixed) o.fixed = 1;
       if (c.t === 'repeater' && c.delay > 1) o.delay = c.delay;
       if (c.t === 'comparator' && c.mode === 'sub') o.mode = 'sub';
       if (Object.keys(o).length) e.push(o);

@@ -2,7 +2,7 @@
 'use strict';
 (function () {
   const { Sim, makeCell, findRoute, TYPES, DIRS, DIR_NAMES, opp } = window.Redstone;
-  const { EXAMPLES, LESSONS, W, H } = window.RedstoneExamples;
+  const { EXAMPLES, CHAPTERS, LESSONS, CHALLENGES, runChallenge, W, H } = window.RedstoneExamples;
 
   // ------------------------------------------------------------------ state
   const st = {
@@ -12,7 +12,9 @@
     undo: [], redo: [], zoom: 1, cs: 24,
     route: { phase: 'src', src: null, tgt: null, result: null },
     comps: null,
+    probes: [], challenge: null, challengeResult: null,
   };
+  const PROBE_COLORS = ['#ff5a4f', '#5ac8ff', '#ffcf4a', '#7ee081'];
 
   const TOOLS = [
     { id: 'hand', label: 'Use', key: 'Q', tip: 'Tap levers, buttons, repeaters and comparators. Tap anything to inspect it.' },
@@ -27,6 +29,7 @@
     { id: 'observer', label: 'Observer', key: '9' },
     { id: 'lamp', label: 'Lamp', key: '0' },
     { id: 'piston', label: 'Piston', key: 'P' },
+    { id: 'probe', label: 'Probe', key: 'T', tip: 'Tap up to 4 parts to graph their signal over time.' },
     { id: 'rotate', label: 'Rotate', key: 'R', tip: 'Tap a torch, repeater, comparator, observer or piston to turn it.' },
     { id: 'erase', label: 'Erase', key: 'E', tip: 'Tap or drag to remove. Right-click also erases with any tool.' },
     { id: 'route', label: 'Route helper', key: 'G', tip: 'Tap a signal source, then the thing to power.' },
@@ -137,6 +140,10 @@
       }
       case 'torch': {
         const on = cell.on;
+        if (cell.burnt) {
+          c.fillStyle = 'rgba(160,160,160,.35)';
+          c.beginPath(); c.arc(cx - s * 0.1, cy - s * 0.25, s * 0.1, 0, 7); c.arc(cx + s * 0.08, cy - s * 0.35, s * 0.08, 0, 7); c.fill();
+        }
         if (info.attached) {
           withRot(c, cx, cy, cell.f, () => {
             c.strokeStyle = COL.wood; c.lineWidth = Math.max(2, s * 0.13); c.lineCap = 'round';
@@ -261,6 +268,15 @@
         for (let d = 0; d < 4; d++) if (isBlock(opp(d))) { o.f = d; break; }
       }
     }
+    if (tool === 'repeater' || tool === 'comparator') {
+      // like in the game, face away from where the power comes from
+      const sim = st.sim;
+      if (!Sim.feeds(sim.nb(x, y, opp(st.rot)), opp(st.rot))) {
+        for (let d = 0; d < 4; d++) {
+          if (Sim.feeds(sim.nb(x, y, d), d)) { o.f = opp(d); break; }
+        }
+      }
+    }
     return makeCell(tool, o);
   }
 
@@ -320,6 +336,22 @@
       const x = i % W, y = (i / W) | 0;
       drawCell(ctx, sim.cells[i], x * s, y * s, s, cellInfo(sim, x, y));
     }
+
+    // fixed (challenge) parts
+    sim.cells.forEach((c, i) => {
+      if (!c || !c.fixed) return;
+      const x = (i % W) * s, y = ((i / W) | 0) * s;
+      ctx.fillStyle = 'rgba(255,207,74,.9)';
+      ctx.beginPath(); ctx.moveTo(x + 1, y + 1); ctx.lineTo(x + s * 0.3, y + 1); ctx.lineTo(x + 1, y + s * 0.3); ctx.closePath(); ctx.fill();
+    });
+    // probes
+    st.probes.forEach((p, k) => {
+      ctx.strokeStyle = PROBE_COLORS[k]; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(p.x * s + s / 2, p.y * s + s / 2, s * 0.46, 0, 7); ctx.stroke();
+      ctx.fillStyle = PROBE_COLORS[k];
+      ctx.font = `700 ${Math.max(9, s * 0.34)}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(k + 1), p.x * s + s * 0.15, p.y * s + s * 0.82);
+    });
 
     // power numbers
     if (st.showLevels) {
@@ -425,7 +457,9 @@
   }
 
   function erase(x, y) {
-    if (!st.sim.get(x, y)) return false;
+    const c = st.sim.get(x, y);
+    if (!c) return false;
+    if (c.fixed) { toast('That part belongs to the challenge and can\'t be removed.'); return false; }
     st.sim.set(x, y, null); st.comps = null; return true;
   }
 
@@ -448,6 +482,7 @@
   function rotateCell(x, y, undoable = true) {
     const c = st.sim.get(x, y);
     if (!c || c.f === undefined) return false;
+    if (c.fixed) { toast('That part belongs to the challenge.'); return true; }
     if (undoable) pushUndo();
     c.f = (c.f + 1) % 4;
     if (c.t === 'observer') c.sig = undefined;
@@ -470,12 +505,13 @@
     const occupied = st.sim.get(x, y);
     st.lastPaint = p;
     if (e.button === 2 || st.tool === 'erase') {
-      if (occupied) { pushUndo(); erase(x, y); changed(); }
+      if (occupied && !occupied.fixed) { pushUndo(); erase(x, y); changed(); } else if (occupied) erase(x, y);
       st.painting = 'erase';
       canvas.setPointerCapture(e.pointerId);
       return;
     }
     if (st.tool === 'route') return routeClick(x, y);
+    if (st.tool === 'probe') return toggleProbe(x, y);
     if (st.tool === 'hand') { if (occupied) interact(x, y); else { st.inspect = { x, y }; renderInspector(); } return; }
     if (st.tool === 'rotate') { if (!rotateCell(x, y)) toast('Only torches, repeaters, comparators, observers and pistons can be rotated.'); return; }
     if (occupied) { interact(x, y); return; }
@@ -529,6 +565,7 @@
     hand: '<svg viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11m0-1V4.5a1.5 1.5 0 0 1 3 0V11m0-5.5a1.5 1.5 0 0 1 3 0V12m0-4.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.6-2.2L4.3 15.4a1.6 1.6 0 0 1 2.4-2.1L8 14.6"/></svg>',
     rotate: '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>',
     erase: '<svg viewBox="0 0 24 24"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.2 4a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L10 21z"/><path d="M22 21H7M5 11l9 9"/></svg>',
+    probe: '<svg viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>',
     route: '<svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/></svg>',
   };
 
@@ -559,7 +596,7 @@
       const kb = document.createElement('kbd'); kb.textContent = t.key;
       b.append(ic, lb, kb);
       b.addEventListener('click', () => setTool(t.id));
-      if (t.id === 'rotate' || t.id === 'route' || t.id === 'hand') b.classList.add('tool-util');
+      if (['rotate', 'route', 'hand', 'probe', 'erase'].includes(t.id)) b.classList.add('tool-util');
       pal.appendChild(b);
     });
   }
@@ -569,11 +606,12 @@
     dust: 'Click or drag to lay dust. A red outline means you would join two separate wires.',
     block: 'Click or drag to place solid blocks. Dust pointing into a block powers it, and torches stuck to it then turn off.',
     torch: 'Torches stick to a block behind them automatically. Use R to change direction.',
-    repeater: 'The arrow shows which way the signal goes. Press R to rotate before placing, and tap a placed one to change its delay.',
+    repeater: 'Takes power from the back and sends it out the arrow. Placed next to a wire, it turns to take power from it. Tap a placed one to change its delay; use Rotate to turn it.',
     comparator: 'Back = main input, sides = compared. Tap a placed one to switch compare/subtract.',
     observer: 'The face looks at the block in front. A pulse comes out the back (red dot) when that block changes.',
     piston: 'Pushes out when powered from any side except its face.',
     rotate: 'Tap a directional part to turn it 90°.',
+    probe: 'Tap up to 4 parts to graph their signal in the Signal graph below the board. Tap again to remove.',
     erase: 'Tap or drag to remove. Right-click erases with any tool.',
     route: 'Route helper: tap the START (what has the signal), then the TARGET.',
   };
@@ -638,6 +676,7 @@
       case 'torch': {
         const A = sim.nb(p.x, p.y, opp(c.f));
         lines.push(c.on ? 'ON, sending 15' : 'OFF');
+        if (c.burnt) lines.push('<span class="warn">BURNT OUT: it flipped too often (8 times in 3 s). It recovers after a few seconds.</span>');
         lines.push(A && A.t === 'block' ? `Stuck to the block ${DIR_NAMES[opp(c.f)]}` : '<span class="warn">Not stuck to a block, so nothing can turn it off. Rotate it so its back touches a block.</span>');
         break;
       }
@@ -678,27 +717,161 @@
 
   function renderLessons() {
     const box = $('#panel-learn');
-    box.innerHTML = '<p class="muted">Each lesson loads a small example onto the board. Your current build is replaced, but you can undo.</p>';
-    LESSONS.forEach(l => {
-      const d = document.createElement('details');
-      d.className = 'lesson';
-      d.innerHTML = `<summary>${l.title}</summary><div class="lesson-body">${l.body}</div>`;
+    box.innerHTML = `<p class="muted">Each lesson loads an example onto the board, replacing your build (Ctrl+Z brings it back). Use the <b>Probe</b> tool and the <b>Signal graph</b> to see timing.</p>`;
+    CHAPTERS.forEach((ch, ci) => {
+      const h = document.createElement('h4'); h.className = 'chapter'; h.textContent = `${ci + 1}. ${ch.title}`;
+      box.appendChild(h);
+      ch.lessons.forEach(l => {
+        const d = document.createElement('details');
+        d.className = 'lesson';
+        d.innerHTML = `<summary>${l.title}</summary><div class="lesson-body">${l.body}</div>`;
+        const b = document.createElement('button');
+        b.className = 'btn primary'; b.textContent = 'Load this example';
+        b.addEventListener('click', () => loadExample(l.id, l.probes));
+        d.querySelector('.lesson-body').appendChild(b);
+        box.appendChild(d);
+      });
+    });
+    const h = document.createElement('h4'); h.className = 'chapter'; h.textContent = `${CHAPTERS.length + 1}. Challenges`;
+    box.appendChild(h);
+    const intro = document.createElement('p'); intro.className = 'muted small';
+    intro.innerHTML = 'The fixed parts (yellow corner) can\'t be removed. Build the rest, then press <b>Check my circuit</b>. The checker flips the inputs for you and watches the lamps.';
+    box.appendChild(intro);
+    const done = loadDone();
+    CHALLENGES.forEach(c => {
       const b = document.createElement('button');
-      b.className = 'btn primary'; b.textContent = 'Load this example';
-      b.addEventListener('click', () => loadExample(l.id));
-      d.querySelector('.lesson-body').appendChild(b);
-      box.appendChild(d);
+      b.className = 'challenge-btn' + (st.challenge === c.id ? ' active' : '');
+      b.innerHTML = `<span>${done[c.id] ? '✅' : '⬜'} ${c.title}</span><span class="stars">${'★'.repeat(c.level)}${'☆'.repeat(4 - c.level)}</span>`;
+      b.addEventListener('click', () => loadChallenge(c.id));
+      box.appendChild(b);
+      if (st.challenge === c.id) box.appendChild(challengeCard(c));
     });
   }
 
-  function loadExample(id) {
+  function loadDone() { try { return JSON.parse(localStorage.getItem('redstone-done') || '{}'); } catch (e) { return {}; } }
+
+  function challengeCard(c) {
+    const d = document.createElement('div'); d.className = 'challenge-card';
+    const r = st.challengeResult;
+    d.innerHTML = `<p>${c.brief}</p>
+      <div class="row"><button class="btn primary" data-act="check">Check my circuit</button><button class="btn" data-act="reset">Restart</button></div>
+      ${r ? (r.error ? `<div class="callout bad">${r.error}</div>` : `<div class="callout ${r.pass ? 'good' : 'bad'}"><b>${r.pass ? 'Solved! 🎉' : 'Not yet'}</b>
+        <ul class="checks">${r.rows.map(x => `<li class="${x.ok ? 'ok' : 'no'}">${x.ok ? '✓' : '✗'} ${x.label}</li>`).join('')}</ul></div>`) : ''}`;
+    d.querySelector('[data-act=check]').addEventListener('click', () => {
+      st.challengeResult = runChallenge(st.sim, c);
+      if (st.challengeResult.pass) {
+        const done = loadDone(); done[c.id] = 1;
+        try { localStorage.setItem('redstone-done', JSON.stringify(done)); } catch (e) { /* ignore */ }
+        toast('Challenge solved!', 'good');
+      }
+      renderLessons();
+    });
+    d.querySelector('[data-act=reset]').addEventListener('click', () => loadChallenge(c.id));
+    return d;
+  }
+
+  function loadBoard(data, probes) {
     pushUndo();
-    const s = Sim.deserialize(EXAMPLES[id](), W, H);
+    const s = Sim.deserialize(data, W, H);
     s.settle(30);
     st.sim.cells = s.cells;
+    st.probes = (probes || []).map(([x, y]) => ({ x, y, hist: [] }));
     resetRoute(true);
     changed();
-    toast('Example loaded. Press Ctrl+Z to get your build back.');
+    renderScope();
+  }
+
+  function loadExample(id, probes) {
+    st.challenge = null; st.challengeResult = null;
+    loadBoard(EXAMPLES[id](), probes);
+    renderLessons();
+    toast('Example loaded. Ctrl+Z brings your build back.');
+  }
+
+  function loadChallenge(id) {
+    const c = CHALLENGES.find(c => c.id === id);
+    st.challenge = id; st.challengeResult = null;
+    loadBoard(c.setup(), []);
+    renderLessons();
+    setTool('dust');
+  }
+
+  // ------------------------------------------------------------------ probes & signal graph
+  function probeVal(x, y) {
+    const sim = st.sim, c = sim.get(x, y);
+    if (!c) return 0;
+    const i = sim.idx(x, y), net = sim.net;
+    switch (c.t) {
+      case 'dust': return net.level[i];
+      case 'lamp': case 'piston': return net.lit[i] ? 15 : 0;
+      case 'comparator': return c.out;
+      case 'observer': return c.pulse ? 15 : 0;
+      case 'block': return net.bpow[i] ? 15 : 0;
+      case 'rblock': return 15;
+      default: return c.on ? 15 : 0;
+    }
+  }
+  function recordProbes() {
+    for (const p of st.probes) { p.hist.push(probeVal(p.x, p.y)); if (p.hist.length > 400) p.hist.shift(); }
+  }
+  function toggleProbe(x, y) {
+    const k = st.probes.findIndex(p => p.x === x && p.y === y);
+    if (k >= 0) st.probes.splice(k, 1);
+    else {
+      if (!st.sim.get(x, y)) { toast('Tap a part (dust, lamp, torch, repeater…) to probe it.'); return; }
+      if (st.probes.length >= 4) st.probes.shift();
+      st.probes.push({ x, y, hist: [] });
+    }
+    render(); renderScope();
+  }
+  function measure(hist) {
+    const rises = [];
+    for (let i = 1; i < hist.length; i++) if (hist[i] > 0 && !(hist[i - 1] > 0)) rises.push(i);
+    if (rises.length < 3) return null;
+    const last = rises.slice(-5), d = last.slice(1).map((r, i) => r - last[i]);
+    if (Math.max(...d) - Math.min(...d) > 1) return null;
+    const period = Math.round(d.reduce((a, b) => a + b, 0) / d.length);
+    let on = 0; for (let i = last[last.length - 2]; i < last[last.length - 1]; i++) if (hist[i] > 0) on++;
+    return { period, on };
+  }
+
+  const scope = $('#scope'), sctx = scope.getContext('2d');
+  function renderScope() {
+    const legend = $('#scopeLegend');
+    const wrap = scope.parentElement;
+    const w = wrap.clientWidth, h = 120, dpr = window.devicePixelRatio || 1;
+    if (scope.width !== w * dpr) { scope.width = w * dpr; scope.height = h * dpr; scope.style.height = h + 'px'; }
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sctx.fillStyle = '#16181c'; sctx.fillRect(0, 0, w, h);
+    const N = 100, step = w / N;
+    sctx.strokeStyle = '#262a31'; sctx.lineWidth = 1;
+    for (let i = 0; i <= N; i += 10) { const x = Math.round(w - i * step) + 0.5; sctx.beginPath(); sctx.moveTo(x, 0); sctx.lineTo(x, h); sctx.stroke(); }
+    if (!st.probes.length) {
+      sctx.fillStyle = '#9aa1aa'; sctx.font = '13px system-ui, sans-serif'; sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
+      sctx.fillText('Pick the Probe tool (T) and tap parts to graph their signal over time', w / 2, h / 2);
+      legend.innerHTML = '';
+      return;
+    }
+    const lane = (h - 8) / st.probes.length;
+    st.probes.forEach((p, k) => {
+      const top = 4 + k * lane, hh = lane - 6;
+      sctx.strokeStyle = PROBE_COLORS[k]; sctx.lineWidth = 2; sctx.beginPath();
+      const hist = p.hist.slice(-N);
+      hist.forEach((v, i) => {
+        const x = w - (hist.length - i) * step, y = top + hh - (v / 15) * hh;
+        if (i === 0) sctx.moveTo(x, y); else { sctx.lineTo(x, sctx._lastY ?? y); sctx.lineTo(x, y); }
+        sctx._lastY = y;
+      });
+      if (hist.length) sctx.lineTo(w, sctx._lastY);
+      sctx.stroke(); sctx._lastY = undefined;
+    });
+    legend.innerHTML = st.probes.map((p, k) => {
+      const c = st.sim.get(p.x, p.y), m = measure(p.hist);
+      const name = c ? TYPES[c.t].name : '(empty)';
+      const info = m ? `period <b>${m.period}</b> ticks (${(m.period / 10).toFixed(1)} s) · on ${m.on} / off ${m.period - m.on}` : `now ${probeVal(p.x, p.y)}`;
+      return `<span class="probe-item"><i style="background:${PROBE_COLORS[k]}"></i>${k + 1}. ${name}: ${info}</span>`;
+    }).join('') + `<button class="btn tiny" id="clearProbes">Clear</button>`;
+    $('#clearProbes').onclick = () => { st.probes = []; render(); renderScope(); };
   }
 
   // ------------------------------------------------------------------ route helper
@@ -771,7 +944,7 @@
   let timer = 0;
   function startLoop() {
     clearInterval(timer);
-    if (st.running) timer = setInterval(() => { st.sim.step(); render(); if (st.inspect) renderInspectorThrottled(); }, 1000 / st.tps);
+    if (st.running) timer = setInterval(tick, 1000 / st.tps);
   }
   let lastInsp = 0;
   function renderInspectorThrottled() { const t = performance.now(); if (t - lastInsp > 120) { lastInsp = t; renderInspector(); } }
@@ -783,7 +956,14 @@
     startLoop();
   }
   $('#playBtn').addEventListener('click', toggleRun);
-  $('#stepBtn').addEventListener('click', () => { st.sim.step(); render(); renderInspector(); });
+  $('#stepBtn').addEventListener('click', () => { tick(); renderInspector(); });
+  function tick() {
+    st.sim.step();
+    recordProbes();
+    render(); renderScope();
+    $('#tickCount').textContent = st.sim.ticks;
+    if (st.inspect) renderInspectorThrottled();
+  }
   $('#speed').addEventListener('change', e => { st.tps = +e.target.value; startLoop(); });
   $('#undoBtn').addEventListener('click', undo);
   $('#rotBtn').addEventListener('click', () => setRot((st.rot + 1) % 4));
@@ -822,10 +1002,10 @@
     if (!data || !data.c || !data.c.length) data = EXAMPLES.basics();
     st.sim = Sim.deserialize(data, W, H);
     st.sim.settle(30);
-    buildPalette(); renderLessons(); renderInspector(); renderRoutePanel();
+    buildPalette(); renderLessons(); renderInspector(); renderRoutePanel(); renderScope();
     setTool('dust'); setRot(1); setTab('learn');
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', () => { resize(); renderScope(); });
     startLoop();
   }
   boot();
