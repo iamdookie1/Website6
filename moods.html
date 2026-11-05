@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mood &amp; Tone Academy</title>
+  <meta name="description" content="Learn to read and name moods, hear voice tones, spot passive-aggressiveness, understand communication styles and body language, and see how anime character types like yandere and tsundere compare with real life.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23b58cff'/%3E%3Cpath d='M4.5 9.5q3.5 3 7 0' stroke='%23fff' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="moods.css">
+</head>
+<body>
+  <header class="top">
+    <a class="home" href="index.html" aria-label="Back to start">←</a>
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <div><h1>Mood &amp; Tone Academy</h1><p>Understand what people feel, how they sound, and what they really mean</p></div>
+    </div>
+    <div class="progress" title="Lessons you've opened"><span id="progressText">0 / 9 explored</span><div class="bar"><i id="progressBar"></i></div></div>
+  </header>
+
+  <nav class="topics" id="topics" aria-label="Topics">
+    <a href="#moods">😶‍🌫️ Moods</a>
+    <a href="#tone">🎙️ Voice tone</a>
+    <a href="#text">💬 Text tone</a>
+    <a href="#pa">🙃 Passive-aggressive</a>
+    <a href="#styles">🗣️ Comm. styles</a>
+    <a href="#body">🧍 Body language</a>
+    <a href="#dere">💘 Dere types</a>
+    <a href="#flags">🚩 Red vs green flags</a>
+    <a href="#quiz">🏆 Final quiz</a>
+  </nav>
+
+  <main>
+    <!-- ============================================================= MOODS -->
+    <section id="moods" class="lesson">
+      <div class="lesson-head"><span class="num">1</span><div><h2>Moods &amp; emotions</h2><p class="lead">Naming a feeling precisely is a skill. The better you can name it, the easier it is to handle.</p></div></div>
+
+      <div class="cols3">
+        <div class="def"><h4>Emotion</h4><p>A quick reaction to something that just happened. Lasts <b>seconds to minutes</b>. <i>"I jumped when the door slammed."</i></p></div>
+        <div class="def"><h4>Mood</h4><p>A background colour that lasts <b>hours or days</b>, often with no clear cause. <i>"I've been grumpy all day."</i></p></div>
+        <div class="def"><h4>Temperament</h4><p>Your usual long-term tendency. <i>"I'm generally a calm person."</i></p></div>
+      </div>
+
+      <h3>The feelings wheel</h3>
+      <p>Most people stop at "good", "bad", "mad" or "sad". Tap a core feeling, then tap a more exact word to learn what it means, what it feels like in the body, and what it usually needs.</p>
+      <div class="wheel" id="wheel"></div>
+      <div class="wheel-sub" id="wheelSub"></div>
+      <div class="feel-card" id="feelCard" hidden></div>
+
+      <div class="tip"><b>Mood check-in:</b> rate yourself on two scales: <b>energy</b> (low ↔ high) and <b>pleasantness</b> (unpleasant ↔ pleasant). Together they give four "mood zones".</div>
+      <div class="checkin" id="checkin">
+        <div class="axes">
+          <label>Energy <input type="range" id="energy" min="0" max="10" value="5"></label>
+          <label>Pleasantness <input type="range" id="pleasant" min="0" max="10" value="5"></label>
+        </div>
+        <div class="zone" id="zone"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================= VOICE TONE -->
+    <section id="tone" class="lesson">
+      <div class="lesson-head"><span class="num">2</span><div><h2>Voice tone</h2><p class="lead">The same words can mean opposite things depending on <b>how</b> they're said.</p></div></div>
+
+      <div class="cols4">
+        <div class="def"><h4>🎵 Pitch</h4><p>High or low. Rising pitch sounds like a question or excitement; falling pitch sounds final, sure or bored.</p></div>
+        <div class="def"><h4>⏱️ Pace</h4><p>Fast can mean excited, nervous or annoyed. Slow can mean calm, sad or "I'm explaining this <i>very</i> clearly".</p></div>
+        <div class="def"><h4>🔊 Volume</h4><p>Loud means energy or anger. Quiet can mean shy, sad, secretive or <i>dangerously</i> calm.</p></div>
+        <div class="def"><h4>✳️ Stress</h4><p>The word you lean on changes the meaning of the whole sentence. Try it below.</p></div>
+      </div>
+
+      <h3>Stress lab: one sentence, seven meanings</h3>
+      <p>Tap a word to <b>stress</b> it and see how the meaning changes.</p>
+      <div class="stress" id="stress"></div>
+      <div class="stress-out" id="stressOut">Tap a word above.</div>
+
+      <h3>Tone lab: "Oh, great."</h3>
+      <p>Pick a tone. The line shows the pitch going up and down, and the bars show pace and volume.</p>
+      <div class="tone-pick" id="tonePick"></div>
+      <div class="tone-view">
+        <svg id="toneSvg" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="tone-info" id="toneInfo"></div>
+      </div>
+
+      <h3>Common tones and how to recognise them</h3>
+      <div class="cards" id="toneCards"></div>
+    </section>
+
+    <!-- ============================================================= TEXT TONE -->
+    <section id="text" class="lesson">
+      <div class="lesson-head"><span class="num">3</span><div><h2>Tone in text messages</h2><p class="lead">With no voice or face, people read tone from punctuation, length, emojis and timing, and they often get it wrong.</p></div></div>
+      <p>Tap a reply to see how people commonly read it. These are <b>common readings, not rules</b>: age, culture and the person's usual style all matter.</p>
+      <div class="replies" id="replies"></div>
+      <div class="reply-out" id="replyOut">Tap a reply.</div>
+      <div class="tip"><b>Golden rule:</b> compare a message with <b>that person's normal style</b>. "ok." from someone who always uses full stops means nothing. From someone who usually sends "okayyy 😊", it might mean something.</div>
+    </section>
+
+    <!-- ============================================================= PASSIVE AGGRESSIVE -->
+    <section id="pa" class="lesson">
+      <div class="lesson-head"><span class="num">4</span><div><h2>Passive-aggressiveness</h2><p class="lead">Showing anger or annoyance <b>indirectly</b>, so it can always be denied: "What? I said it was fine."</p></div></div>
+
+      <div class="cols2">
+        <div>
+          <h3>Common signs</h3>
+          <ul class="ticks">
+            <li><b>"Fine." / "Whatever."</b> Agreeing in words but not in tone.</li>
+            <li><b>Silent treatment:</b> withdrawing to punish instead of talking.</li>
+            <li><b>Backhanded compliments:</b> "You look great, for once!"</li>
+            <li><b>Sarcasm as a shield:</b> "Oh no, take your time, I <i>love</i> waiting."</li>
+            <li><b>Deliberate "forgetting"</b> or doing a task badly on purpose.</li>
+            <li><b>Pointed reminders:</b> "As I <i>already</i> said…", "Per my last message…"</li>
+            <li><b>Hinting to others</b> instead of talking to the person: vague posts, "some people…"</li>
+            <li><b>Fake cheerfulness</b> that doesn't match the situation: "No worries!!! 🙂"</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Why people do it</h3>
+          <ul class="ticks">
+            <li>They're afraid of conflict or of being seen as "mean".</li>
+            <li>They grew up where showing anger openly wasn't safe or allowed.</li>
+            <li>They want the other person to <i>guess</i> what's wrong.</li>
+            <li>They feel powerless to change things directly.</li>
+          </ul>
+          <h3>How to respond</h3>
+          <ol class="steps">
+            <li><b>Stay calm</b> and don't match the tone.</li>
+            <li><b>Name it gently:</b> "You said it's fine, but you sound annoyed. Is something up?"</li>
+            <li><b>Ask about the real issue</b> and listen.</li>
+            <li><b>Set a limit</b> if it keeps happening: "I'd rather you tell me straight when you're upset."</li>
+          </ol>
+        </div>
+      </div>
+
+      <h3>Decoder game</h3>
+      <p>Is each message <b>sincere</b>, <b>passive-aggressive</b>, <b>sarcastic</b> or <b>assertive</b>? Pick one and see the explanation, plus a more direct way to say it.</p>
+      <div class="decoder" id="decoder"></div>
+    </section>
+
+    <!-- ============================================================= STYLES -->
+    <section id="styles" class="lesson">
+      <div class="lesson-head"><span class="num">5</span><div><h2>The 4 communication styles</h2><p class="lead">The same situation can be handled four ways. Only one respects both people.</p></div></div>
+      <p class="scenario">Situation: <b>your friend keeps borrowing your stuff without asking.</b> Tap each style.</p>
+      <div class="styles" id="styleCards"></div>
+      <div class="tip"><b>Assertive formula:</b> "When <i>[what happened]</i>, I feel <i>[feeling]</i>, because <i>[why it matters]</i>. Could you <i>[clear request]</i>?"</div>
+      <h3>Practice: make it assertive</h3>
+      <div class="flips" id="flips"></div>
+    </section>
+
+    <!-- ============================================================= BODY -->
+    <section id="body" class="lesson">
+      <div class="lesson-head"><span class="num">6</span><div><h2>Body language &amp; faces</h2><p class="lead">The body adds clues, but <b>one signal alone means nothing</b>. Look for groups of signals, changes from normal, and context.</p></div></div>
+      <div class="cards" id="bodyCards"></div>
+      <div class="tip warn"><b>Myth:</b> "Crossed arms always means defensive." It can also mean cold, comfy or just a habit. <b>Myth:</b> "Liars won't look you in the eye." Plenty of honest people avoid eye contact, including many autistic people and people from cultures where steady eye contact is rude.</div>
+    </section>
+
+    <!-- ============================================================= DERE -->
+    <section id="dere" class="lesson">
+      <div class="lesson-head"><span class="num">7</span><div><h2>"Dere" character types</h2><p class="lead">Anime and manga describe love interests by how they show affection. "Dere" comes from <i>deredere</i>, Japanese for being lovey-dovey.</p></div></div>
+      <p>Tap a card to flip it. Each card has a <b>real-life lens</b>: what this behaviour would mean if a real person did it.</p>
+      <div class="dere" id="dereCards"></div>
+      <div class="tip danger">
+        <b>Yandere in real life = not romantic.</b> In fiction, a yandere's obsession is played for drama or thrills. In real life, jealousy that controls you, checking your phone, cutting you off from friends, or threats ("if you leave, I'll hurt myself / you") are <b>warning signs of an abusive relationship</b>, not proof of love. See <a href="#flags">Red vs green flags</a>.
+      </div>
+    </section>
+
+    <!-- ============================================================= FLAGS -->
+    <section id="flags" class="lesson">
+      <div class="lesson-head"><span class="num">8</span><div><h2>Red flags vs green flags</h2><p class="lead">Learn to tell caring behaviour from controlling behaviour, in friendships and relationships.</p></div></div>
+      <p>Sort each behaviour: <b>🟢 healthy</b> or <b>🚩 red flag</b>?</p>
+      <div class="sorter" id="sorter"></div>
+      <div class="score-line" id="sorterScore"></div>
+      <div class="help">
+        <h4>If something feels wrong</h4>
+        <p>Talk to someone you trust: a friend, parent, teacher or school counsellor. In the US you can text <b>LOVEIS</b> to <b>22522</b> or visit <a href="https://www.loveisrespect.org" target="_blank" rel="noopener">loveisrespect.org</a> (for relationships). If you're in crisis, call or text <b>988</b>. Outside the US, search for your local helpline. If someone is in danger right now, call emergency services.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================= QUIZ -->
+    <section id="quiz" class="lesson">
+      <div class="lesson-head"><span class="num">9</span><div><h2>Final quiz</h2><p class="lead">12 questions on everything above.</p></div></div>
+      <div class="quiz" id="quizBox"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    For learning and self-reflection, not a substitute for professional help. ·
+    <a href="index.html">Back to start</a> · <a href="redstone.html">Go to Web 1 (Redstone)</a>
+  </footer>
+
+  <script src="moods.js"></script>
+</body>
+</html>

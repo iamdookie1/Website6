@@ -1,3 +1,10 @@
+# Website6
+
+The start page (`index.html`) has two buttons:
+
+- **Web 1: Redstone Playground** (`redstone.html`): the redstone circuit sandbox below.
+- **Web 2: Mood & Tone Academy** (`moods.html`): interactive lessons on moods and emotions (feelings wheel, mood check-in), voice tone (stress lab, pitch "tone lab"), tone in texts, passive-aggressiveness (decoder game), the 4 communication styles, body language, anime "dere" character types (tsundere, yandere…) with a real-life lens, red vs green relationship flags, and a 12-question final quiz.
+
 # Redstone Playground
 
 A browser-based redstone circuit sandbox. Place dust, blocks, levers, buttons, torches, repeaters, comparators, observers, lamps and pistons on a grid, and watch the signal flow tick by tick.

@@ -201,3 +201,6 @@ h1 { font-size: 17px; letter-spacing: .2px; }
 .checks li { margin: 3px 0; }
 .checks li.ok { color: var(--green); }
 .checks li.no { color: #ff8a7f; }
+
+.home-link { color: var(--muted); text-decoration: none; font-size: 18px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 8px; }
+.home-link:hover { color: var(--text); border-color: #4a505a; }

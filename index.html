@@ -3,79 +3,86 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Redstone Playground</title>
-  <meta name="description" content="A redstone circuit sandbox. Place dust, torches, repeaters, comparators and more, learn how signals work, and get help routing a signal without breaking your other circuits.">
-  <meta name="theme-color" content="#14161a">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23b3140d'/%3E%3Cpath d='M3 8h10M8 3v10' stroke='%23ff6a5c' stroke-width='2'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
+  <title>Pick a Website</title>
+  <meta name="description" content="Choose Web 1 (Redstone Playground) or Web 2 (Mood & Tone Academy).">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%23222'/%3E%3Ccircle cx='5.5' cy='8' r='2.5' fill='%23e5372c'/%3E%3Ccircle cx='10.5' cy='8' r='2.5' fill='%23b58cff'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg: #f6f3ee; --card: #ffffff; --text: #1f1d1a; --muted: #6b665e; --line: #e4ded4;
+      --red: #d92f24; --violet: #7a4fd6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #131417; --card: #1c1e22; --text: #eeebe6; --muted: #9ea3aa; --line: #2c3036; --red: #ff5146; --violet: #b58cff; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 16px;
+    }
+    h1 { font-size: clamp(28px, 5vw, 42px); margin: 0 0 6px; letter-spacing: -.5px; text-align: center; }
+    .sub { color: var(--muted); margin: 0 0 36px; text-align: center; }
+    .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 340px)); gap: 20px; width: 100%; justify-content: center; }
+    .choice {
+      display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: inherit;
+      background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px 24px;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+    }
+    .choice:hover, .choice:focus-visible { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0,0,0,.12); outline: none; }
+    .choice.web1:hover, .choice.web1:focus-visible { border-color: var(--red); }
+    .choice.web2:hover, .choice.web2:focus-visible { border-color: var(--violet); }
+    .tag { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .web1 .tag { color: var(--red); }
+    .web2 .tag { color: var(--violet); }
+    .art { height: 120px; border-radius: 12px; display: grid; place-items: center; overflow: hidden; }
+    .web1 .art { background: #191b20; }
+    .web2 .art { background: linear-gradient(135deg, #ffd9a8, #f7a8c4 45%, #b9a4ff); }
+    .choice h2 { margin: 0; font-size: 22px; }
+    .choice p { margin: 0; color: var(--muted); font-size: 15px; }
+    .go {
+      margin-top: auto; align-self: flex-start; font-weight: 700; padding: 10px 18px; border-radius: 10px; color: #fff;
+    }
+    .web1 .go { background: var(--red); }
+    .web2 .go { background: var(--violet); }
+    footer { color: var(--muted); font-size: 13px; margin-top: 40px; text-align: center; }
+    @media (max-width: 720px) { .choices { grid-template-columns: minmax(0, 1fr); } }
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="logo" aria-hidden="true"></span>
-      <div>
-        <h1>Redstone Playground</h1>
-        <p class="tagline">Build circuits, see how the signal flows</p>
+  <h1>Which website do you want?</h1>
+  <p class="sub">Pick one to load it. You can come back here any time.</p>
+
+  <div class="choices">
+    <a class="choice web1" href="redstone.html">
+      <span class="tag">Web 1</span>
+      <div class="art" aria-hidden="true">
+        <svg width="220" height="80" viewBox="0 0 220 80">
+          <rect x="10" y="28" width="24" height="24" rx="3" fill="#62666d"/><circle cx="22" cy="34" r="5" fill="#ff3b2f"/>
+          <path d="M34 40H90" stroke="#ff3b2f" stroke-width="6" stroke-linecap="round"/>
+          <rect x="90" y="28" width="26" height="24" rx="4" fill="#b9bcc0"/><circle cx="99" cy="40" r="3.5" fill="#ff3b2f"/><circle cx="109" cy="40" r="3.5" fill="#ff3b2f"/>
+          <path d="M116 40H176" stroke="#ff3b2f" stroke-width="6" stroke-linecap="round"/>
+          <rect x="176" y="26" width="28" height="28" rx="3" fill="#ffd56b"/><circle cx="190" cy="40" r="22" fill="#ffd56b" opacity=".18"/>
+        </svg>
       </div>
-    </div>
-    <div class="controls">
-      <button class="btn" id="playBtn" title="Pause or resume (Space)">⏸ Pause</button>
-      <button class="btn" id="stepBtn" title="Advance one redstone tick" disabled>Step</button>
-      <select id="speed" class="btn" title="Simulation speed" aria-label="Simulation speed">
-        <option value="2">0.2×</option>
-        <option value="5">0.5×</option>
-        <option value="10" selected>1× (10 ticks/s)</option>
-        <option value="20">2×</option>
-      </select>
-      <button class="btn" id="rotBtn" title="Placement direction (R)">Facing <span class="rot-arrow">→</span></button>
-      <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
-      <button class="btn" id="clearBtn">Clear</button>
-      <button class="btn" id="shareBtn" title="Copy a link to this build">Share</button>
-    </div>
-  </header>
+      <h2>Redstone Playground</h2>
+      <p>Build redstone circuits, follow a course on gates, clocks and memory, and solve challenges.</p>
+      <span class="go">Load Web 1 →</span>
+    </a>
 
-  <main class="layout">
-    <nav class="palette" id="palette" aria-label="Parts and tools"></nav>
-
-    <section class="stage">
-      <div class="stage-bar">
-        <label class="chk"><input type="checkbox" id="levelsChk"> Show power levels</label>
-        <label class="chk"><input type="checkbox" id="circuitsChk"> Color separate circuits</label>
-        <span class="spacer"></span>
-        <button class="btn icon" id="zoomOut" aria-label="Zoom out">−</button>
-        <button class="btn icon" id="zoomIn" aria-label="Zoom in">+</button>
+    <a class="choice web2" href="moods.html">
+      <span class="tag">Web 2</span>
+      <div class="art" aria-hidden="true">
+        <svg width="220" height="80" viewBox="0 0 220 80">
+          <circle cx="40" cy="40" r="24" fill="#fff" opacity=".85"/><path d="M30 46q10 9 20 0" stroke="#5a3d8a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="32" cy="34" r="2.6" fill="#5a3d8a"/><circle cx="48" cy="34" r="2.6" fill="#5a3d8a"/>
+          <path d="M78 40q14-26 28 0t28 0 28 0 28 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".9"/>
+        </svg>
       </div>
-      <div class="board-scroll" id="boardScroll">
-        <canvas id="board" aria-label="Redstone board"></canvas>
-      </div>
-      <p class="hint" id="hint"></p>
-      <div class="scope-box">
-        <div class="scope-head"><b>Signal graph</b><span class="muted small">last 100 ticks · tick <span id="tickCount">0</span></span></div>
-        <div class="scope-wrap"><canvas id="scope"></canvas></div>
-        <div class="scope-legend" id="scopeLegend"></div>
-      </div>
-    </section>
+      <h2>Mood &amp; Tone Academy</h2>
+      <p>Learn about moods, voice tones, passive-aggressiveness, communication styles, body language and character types like yandere and tsundere.</p>
+      <span class="go">Load Web 2 →</span>
+    </a>
+  </div>
 
-    <aside class="side">
-      <div class="tabs" role="tablist">
-        <button class="tab" data-tab="learn" role="tab">Learn</button>
-        <button class="tab" data-tab="inspect" role="tab">Inspect</button>
-        <button class="tab" data-tab="route" role="tab">Route helper</button>
-      </div>
-      <div class="tab-panel" id="panel-learn"></div>
-      <div class="tab-panel" id="panel-inspect" hidden></div>
-      <div class="tab-panel" id="panel-route" hidden></div>
-    </aside>
-  </main>
-
-  <footer class="foot">
-    Fan-made redstone sandbox. Not affiliated with Mojang or Microsoft. Shortcuts: 1–0 &amp; P parts · Q use · E erase · R rotate · T probe · G route helper · Space pause · Ctrl+Z undo
-  </footer>
-
-  <div id="toast" role="status" aria-live="polite"></div>
-
-  <script src="js/sim.js"></script>
-  <script src="js/examples.js"></script>
-  <script src="js/app.js"></script>
+  <footer>Made for learning. Redstone Playground is fan-made and not affiliated with Mojang or Microsoft.</footer>
 </body>
 </html>

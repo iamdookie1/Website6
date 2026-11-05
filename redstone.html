@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redstone Playground</title>
+  <meta name="description" content="A redstone circuit sandbox. Place dust, torches, repeaters, comparators and more, learn how signals work, and get help routing a signal without breaking your other circuits.">
+  <meta name="theme-color" content="#14161a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23b3140d'/%3E%3Cpath d='M3 8h10M8 3v10' stroke='%23ff6a5c' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a class="home-link" href="index.html" title="Back to start" aria-label="Back to start">←</a>
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>Redstone Playground</h1>
+        <p class="tagline">Build circuits, see how the signal flows</p>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="playBtn" title="Pause or resume (Space)">⏸ Pause</button>
+      <button class="btn" id="stepBtn" title="Advance one redstone tick" disabled>Step</button>
+      <select id="speed" class="btn" title="Simulation speed" aria-label="Simulation speed">
+        <option value="2">0.2×</option>
+        <option value="5">0.5×</option>
+        <option value="10" selected>1× (10 ticks/s)</option>
+        <option value="20">2×</option>
+      </select>
+      <button class="btn" id="rotBtn" title="Placement direction (R)">Facing <span class="rot-arrow">→</span></button>
+      <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
+      <button class="btn" id="clearBtn">Clear</button>
+      <button class="btn" id="shareBtn" title="Copy a link to this build">Share</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <nav class="palette" id="palette" aria-label="Parts and tools"></nav>
+
+    <section class="stage">
+      <div class="stage-bar">
+        <label class="chk"><input type="checkbox" id="levelsChk"> Show power levels</label>
+        <label class="chk"><input type="checkbox" id="circuitsChk"> Color separate circuits</label>
+        <span class="spacer"></span>
+        <button class="btn icon" id="zoomOut" aria-label="Zoom out">−</button>
+        <button class="btn icon" id="zoomIn" aria-label="Zoom in">+</button>
+      </div>
+      <div class="board-scroll" id="boardScroll">
+        <canvas id="board" aria-label="Redstone board"></canvas>
+      </div>
+      <p class="hint" id="hint"></p>
+      <div class="scope-box">
+        <div class="scope-head"><b>Signal graph</b><span class="muted small">last 100 ticks · tick <span id="tickCount">0</span></span></div>
+        <div class="scope-wrap"><canvas id="scope"></canvas></div>
+        <div class="scope-legend" id="scopeLegend"></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="tabs" role="tablist">
+        <button class="tab" data-tab="learn" role="tab">Learn</button>
+        <button class="tab" data-tab="inspect" role="tab">Inspect</button>
+        <button class="tab" data-tab="route" role="tab">Route helper</button>
+      </div>
+      <div class="tab-panel" id="panel-learn"></div>
+      <div class="tab-panel" id="panel-inspect" hidden></div>
+      <div class="tab-panel" id="panel-route" hidden></div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    Fan-made redstone sandbox. Not affiliated with Mojang or Microsoft. Shortcuts: 1–0 &amp; P parts · Q use · E erase · R rotate · T probe · G route helper · Space pause · Ctrl+Z undo
+  </footer>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/sim.js"></script>
+  <script src="js/examples.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
