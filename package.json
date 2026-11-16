@@ -1,0 +1,7 @@
+{
+  "name": "website6-webhook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "POST-only relay that forwards arguments to a Discord webhook",
+  "engines": { "node": ">=18" }
+}
